@@ -14,22 +14,33 @@ fn main() {
 }
 
 fn handle_connection(mut stream: TcpStream) {
-    // Read request
     let mut buffer = [0; 1024];
     stream.read(&mut buffer).unwrap();
 
-    // Print request
-    println!("{}", String::from_utf8_lossy(&buffer[..]));
+    let get = b"GET / HTTP/1.1\r\n";
 
-    // Read HTML
-    let html = fs::read_to_string("index.html").unwrap();
+    if buffer.starts_with(get) {
+        let content = fs::read_to_string("index.html").unwrap();
 
-    // Send response
-    let res = format!(
-        "HTTP/1.1 200 OK\r\nContent-Length: {}\r\n\r\n{}",
-        html.len(),
-        html
-    );
-    stream.write(res.as_bytes()).unwrap();
-    stream.flush().unwrap();
+        let res = format!(
+            "HTTP/1.1 200 OK\r\nContent-Length: {}\r\n\r\n{}",
+            content.len(),
+            content
+        );
+        stream.write(res.as_bytes()).unwrap();
+        stream.flush().unwrap();
+    } else {
+        let status_line = "HTTP/1.1 404 NOT FOUND";
+        let content = "Error 404: Not a valid route.";
+
+        let res = format!(
+            "{}\r\nContent-Length: {}\r\n\r\n{}",
+            status_line,
+            content.len(),
+            content
+        );
+
+        stream.write(res.as_bytes()).unwrap();
+        stream.flush().unwrap();
+    }
 }
