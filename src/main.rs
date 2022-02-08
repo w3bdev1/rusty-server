@@ -1,5 +1,5 @@
 use std::{
-    io::Read,
+    io::{Read, Write},
     net::{TcpListener, TcpStream},
 };
 
@@ -13,7 +13,16 @@ fn main() {
 }
 
 fn handle_connection(mut stream: TcpStream) {
+    // Read request
     let mut buffer = [0; 1024];
     stream.read(&mut buffer).unwrap();
+
+    // Print request
     println!("{}", String::from_utf8_lossy(&buffer[..]));
+
+    // Send response
+    let res = "HTTP/1.1 200 OK\r\n\r\n";
+
+    stream.write(res.as_bytes()).unwrap();
+    stream.flush().unwrap();
 }
